@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 # Configure OpenAI and Replicate API tokens
 REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN")
-openai.api_key = os.environ.get("openai_api_key")
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
