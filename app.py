@@ -105,7 +105,8 @@ def add_text_to_image(image, text):
     rectangle_height = int((text_height * 1.2) * len(lines) + text_height * 0.2)
     draw.rectangle(
         [rectangle_x, rectangle_y, rectangle_x + rectangle_width, rectangle_y + rectangle_height],
-        fill=(255, 255, 255)
+        alpha = 64  # 透明度，范围为 0 至 255，128 表示半透明
+        fill=(255, 255, 255, alpha)
     )
 
     # 添加黑色文本
