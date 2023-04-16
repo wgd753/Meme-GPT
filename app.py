@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import base64
 from io import BytesIO
 
@@ -10,6 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 app = Flask(__name__)
 
 # Configure OpenAI and Replicate API tokens
+load_dotenv()
 REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN")
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
