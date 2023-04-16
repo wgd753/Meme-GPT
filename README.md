@@ -8,6 +8,11 @@ This is a simple meme generator built with Flask, which combines OpenAI and Repl
 
 这是一个使用 Flask 构建的简单表情包生成器，它结合了 OpenAI 和 Replicate 来从上传的图片生成有趣的表情包文案。  
 
+<p float="left">
+  <img src="sample0.png" alt="sample0" width="45%" />
+  <img src="sample1.png" alt="sample1" width="45%" />
+</p>
+
 ## Features / 功能
 
 1. Upload an image / 上传图片
