@@ -1,9 +1,5 @@
 # Meme-GPT / GPT表情包生成器  
 
-This document and the entire project were generated entirely by GPT-4.  
-
-本文及本项目完全由 GPT-4 生成。  
-
 This is a simple meme generator built with Flask, which combines OpenAI and Replicate to generate interesting meme text from an uploaded image.  
 
 这是一个使用 Flask 构建的简单表情包生成器，它结合了 OpenAI 和 Replicate 来从上传的图片生成有趣的表情包文案。  
