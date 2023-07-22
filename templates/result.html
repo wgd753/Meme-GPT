@@ -36,7 +36,10 @@
     </style>
 </head>
 <body>
-    <img src="data:image/jpeg;base64,{{ base64_image }}" alt="Generated Meme" style="max-width: 100%; max-height: 500px; height: auto;">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <img src="data:image/jpeg;base64,{{ base64_image }}" alt="Generated Meme" style="max-width: 100%; max-height: 500px; height: auto;">
+        <p style="max-width: 100%; text-align: center; word-wrap: break-word;">{{ meme_text }}</p>
+    </div>
     <br>
     <button onclick="window.location.href='/'">再来一张</button>
 </body>
