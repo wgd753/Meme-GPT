@@ -1,5 +1,3 @@
 Flask
 openai
-replicate
 Pillow
-gunicorn

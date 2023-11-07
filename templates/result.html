@@ -22,6 +22,12 @@
             margin-top: 30px;
             margin-bottom: 20px;
         }
+        p {
+            margin: 20px auto;
+            text-align: center;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
         button {
             background-color: #3e8e41;
             color: #fff;
@@ -36,9 +42,10 @@
     </style>
 </head>
 <body>
+    <h1>生成的表情包</h1>
     <div style="display: flex; flex-direction: column; align-items: center;">
         <img src="data:image/jpeg;base64,{{ base64_image }}" alt="Generated Meme" style="max-width: 100%; max-height: 500px; height: auto;">
-        <p style="max-width: 100%; text-align: center; word-wrap: break-word;">{{ meme_text }}</p>
+        <p>{{ meme_text }}</p>
     </div>
     <br>
     <button onclick="window.location.href='/'">再来一张</button>

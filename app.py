@@ -1,66 +1,100 @@
 import os
 from dotenv import load_dotenv
 import base64
+import requests
 from io import BytesIO
 
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, flash, redirect
 import openai
-import replicate
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
+from werkzeug.utils import secure_filename
+import imghdr
 
 app = Flask(__name__)
 
-# Configure OpenAI and Replicate API tokens
+# Configure OpenAI API tokens and set Flask configurations
 load_dotenv()
-REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN")
 openai.api_key = os.environ.get("OPENAI_API_KEY")
+app.secret_key = 'your_secret_key'
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20MB limit
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validate_image_stream(stream):
+    header = stream.read(512)  # read the first 512 bytes
+    stream.seek(0) 
+    format = imghdr.what(None, header)
+    if not format:
+        return None
+    return '.' + (format if format != 'jpeg' else 'jpg')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        image_data = request.files['image'].read()
-        image_description = get_image_description(image_data)
-        meme_text = generate_meme_text(image_description)
-
-        # 将 image_data 转换为 Image 对象
-        image = Image.open(BytesIO(image_data))
-
-        # 将生成的图片转换为Base64编码的字符串
-        base64_image = convert_image_to_base64(image)
-        
-        # 将图片的Base64编码和生成的文本作为变量传递给 render_template 函数
-        return render_template("result.html", base64_image=base64_image, meme_text=meme_text)
-
+        file = request.files.get('image')
+        if file is None or file.filename == '':
+            flash('没有选择文件')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            extension = validate_image_stream(file.stream)
+            if not extension:
+                flash('无效的图像格式')
+                return redirect(request.url)
+            filename = secure_filename(file.filename)
+            image_data = file.read()
+            image_description = get_image_description(image_data) or "未能识别出图片内容。"
+            base64_image = convert_image_to_base64(image_data)
+            return render_template("result.html", base64_image=base64_image, meme_text=image_description)
+        else:
+            flash('文件类型不被允许')
+            return redirect(request.url)
     return render_template('index.html')
 
 def get_image_description(image_data):
-    client = replicate.Client(api_token=REPLICATE_API_TOKEN)
-    output = client.run(
-        "andreasjansson/blip-2:4b32258c42e9efd4288bb9910bc532a69727f9acd26aa08e175713a0a857a608",
-        input={"image": BytesIO(image_data)}
-    )
-    return output  # 直接返回 output 字符串
-
-def generate_meme_text(image_description):
-    prompt = f"你现在是一个表情包文案生成器，你需要根据图片描述直接给出反讽，有趣的表情包文案，直接给出一句文案即可，字数简短，不需要多余的描述。 图片描述: {image_description}"
-    query = "给我一句有趣的表情包文案。"
-
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": query},
+    base64_image = base64.b64encode(image_data).decode('utf-8')
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai.api_key}"
+    }
+    payload = {
+        "model": "gpt-4-vision-preview",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "你现在是一个表情包文案生成器，你需要根据图片描述直接给出反讽，有趣的表情包文案，直接给出一句文案即可，字数简短，不需要多余的描述。"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
+                        }
+                    }
+                ]
+            }
         ],
-    )
+        "max_tokens": 300
+    }
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    if response.status_code == 200:
+        # 将响应的内容打印出来，以便调试
+        print("API response:", response.json())
+        return response.json().get('choices', [{}])[0].get('message', {}).get('content')
+    else:
+        # 打印出错误的响应状态码和信息，以便调试
+        print(f"Error: {response.status_code}, Response: {response.text}")
+        return None
 
-    meme_text = response.choices[0].message.content.strip()
-    return meme_text
-
-def convert_image_to_base64(image):
+def convert_image_to_base64(image_data):
     buffered = BytesIO()
+    image = Image.open(BytesIO(image_data))
     image.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue())
-    return img_str.decode("utf-8")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 if __name__ == "__main__":
     app.run()
